@@ -4,6 +4,7 @@ import { TouchableOpacity, StyleSheet, Text, View, FlatList } from 'react-native
 import AppBar from './components/AppBar';
 import NewNoteModal from './components/NewNoteModal';
 import NoteCard from './components/NoteCard';
+import { NoteContext } from './NoteContext';
 
 const App = () => {
   const [notes, setNotes] = useState([
@@ -61,12 +62,20 @@ const App = () => {
         addNote={addNote}
         closeModal={closeModal}
       />
-      <FlatList
-        data={notes}
-        renderItem={NoteCard}
-        keyExtractor={item => item.id.toString()}
-        extraData={true}
-      />
+      <NoteContext.Provider value={{ notes, setNotes }}>
+        <FlatList
+          data={notes}
+          renderItem={({ item }) => (
+            <NoteContext.Consumer>
+              {noteContext => (
+                <NoteCard item={item} noteContext={noteContext}  />
+              )}
+            </NoteContext.Consumer>
+          )}
+          keyExtractor={item => item.id.toString()}
+          extraData={notes}
+        />
+      </NoteContext.Provider>
       <TouchableOpacity style={styles.button} onPress={showModal}>
         <Text style={styles.buttonText}>+</Text>
       </TouchableOpacity>

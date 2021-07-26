@@ -1,11 +1,19 @@
-import React from "react";
+import React, { useContext } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
-const NoteCard = ({ item }) => {
+const NoteCard = ({item, noteContext}) => {
+    const {notes, setNotes} = noteContext;
+    const deletePress = () => {
+        setNotes([...notes].filter(note => item.id !== note.id));
+    }
+
     return (
         <View style={styles.taskCard}>
             <Text style={styles.title}>{item.title}</Text>
             <Text>{item.description}</Text>
+            <TouchableOpacity style={styles.delete} onPress={deletePress}>
+                <Text style={styles.deleteText}>X</Text>
+            </TouchableOpacity>
         </View>
     )
 }
@@ -28,5 +36,20 @@ const styles = StyleSheet.create({
     title: {
         fontWeight: "bold",
         marginBottom: 8
+    },
+    delete: {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        alignSelf: "flex-end",
+        backgroundColor: "#1e1f22",
+        width: 28,
+        height: 28,
+        borderRadius: 100
+    },
+    deleteText: {
+        color: "#fff",
+        fontSize: 20,
+        fontWeight: "bold"
     }
 });
