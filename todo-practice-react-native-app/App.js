@@ -1,39 +1,47 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, StyleSheet, Text, View, FlatList } from 'react-native';
 import AppBar from './components/AppBar';
 import NewNoteModal from './components/NewNoteModal';
 import NoteCard from './components/NoteCard';
 import { NoteContext } from './NoteContext';
+import firebase from "./firebase/config";
 
 const App = () => {
-  const [notes, setNotes] = useState([
-    {
-      id: 1,
-      title: "Sample task",
-      description: "Let's get familiar with React Native components! Exciting, isn't it?"
-    },
-    {
-      id: 2,
-      title: "Another Task",
-      description: "React Native uses stylesheets for styling that is simiilar to CSS. Beware though that vh and vw for width and height does not work in native. Use instead percentage dimensions."
-    }
-  ]);
+  const db = firebase.firestore();
+  const [notes, setNotes] = useState([]);
   const [visible, setVisible] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
 
+  useEffect(() => {
+    getAllNotes();
+  }, []);
+
+  const getAllNotes = () => {
+    db.collection("notes").get().then(qs => {
+      setNotes(qs.docs.map(doc => {
+        const id = doc.id;
+        const title = doc.data().title;
+        const description = doc.data().description;
+        const note = {id, title, description};
+        return note;
+      }));
+    }).catch((error) => console.error("Could not get collection: ", error));
+  }
+
   const addNote = () => {
     if (newTitle && newDescription) {
-      const id = Math.max(...notes.map(note => note.id)) + 1;
       const newNote = {
-        id,
         title: newTitle,
         description: newDescription
       }
-      clearInput();
-      closeModal();
-      setNotes([...notes, newNote]);
+      db.collection("notes").doc().set(newNote)
+      .then(() => {
+        clearInput();
+        closeModal();
+        getAllNotes();
+      }).catch((error) => console.error("Error adding document: ", error));
     }
   }
 
@@ -63,7 +71,7 @@ const App = () => {
         closeModal={closeModal}
       />
       <NoteContext.Provider value={{ notes, setNotes }}>
-        <FlatList
+        {notes.length > 0 ? <FlatList
           data={notes}
           renderItem={({ item }) => (
             <NoteContext.Consumer>
@@ -74,7 +82,7 @@ const App = () => {
           )}
           keyExtractor={item => item.id.toString()}
           extraData={notes}
-        />
+        /> : <></> }
       </NoteContext.Provider>
       <TouchableOpacity style={styles.button} onPress={showModal}>
         <Text style={styles.buttonText}>+</Text>

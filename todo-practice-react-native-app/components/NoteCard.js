@@ -1,10 +1,15 @@
 import React, { useContext } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import firebase from "../firebase/config";
 
-const NoteCard = ({item, noteContext}) => {
-    const {notes, setNotes} = noteContext;
+const NoteCard = ({ item, noteContext }) => {
+    const db = firebase.firestore();
+    const { notes, setNotes } = noteContext;
     const deletePress = () => {
-        setNotes([...notes].filter(note => item.id !== note.id));
+        db.collection("notes").doc(item.id).delete()
+            .then(() => {
+                setNotes([...notes].filter(note => item.id !== note.id));
+            }).catch((error) => console.error("Error removing document: ", error));
     }
 
     return (
